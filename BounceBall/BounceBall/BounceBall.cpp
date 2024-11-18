@@ -134,9 +134,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 400, 250, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
             CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 400, 350, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
+            InvalidateRect(hWnd, NULL, TRUE);
+            UpdateWindow(hWnd);
         }
+        
     }
     break;
+    case WM_ERASEBKGND:
+        return 1;
+    case WM_LBUTTONDOWN:
+    {
+        // 마우스 클릭 위치
+        int xPos = LOWORD(lParam);
+        int yPos = HIWORD(lParam);
+
+        // 비트맵 이미지 영역
+        RECT bitmapRect = { 900, 20, 940, 60 };
+
+        if (xPos >= bitmapRect.left && xPos <= bitmapRect.right && yPos >= bitmapRect.top && yPos <= bitmapRect.bottom)
+        {
+            game.suspendGame();
+            CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 400, 230, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("다시하기"), WS_VISIBLE | WS_CHILD, 400, 330, 200, 50, hWnd, (HMENU)3002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("계속하기"), WS_VISIBLE | WS_CHILD, 400, 430, 200, 50, hWnd, (HMENU)3003, hInst, NULL);
+            currentScreen = PAUSE_SCREEN;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+    }
+        break;
     case WM_KEYUP:
         switch (wParam)
         {
@@ -178,7 +203,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             currentScreen = GAME_SCREEN;
             DestroyWindow(GetDlgItem(hWnd, 1001));
             DestroyWindow(GetDlgItem(hWnd, 1002));
-            CreateWindow(TEXT("button"), TEXT("❚❚"), WS_VISIBLE | WS_CHILD, 930, 20, 30, 30, hWnd, (HMENU)1003, hInst, NULL);
+
+            hPauseImage = (HBITMAP)LoadImage(
+                NULL,                   // 인스턴스 핸들
+                _T("stop.bmp"),   // 이미지 파일 경로
+                IMAGE_BITMAP,           // 이미지 형식
+                0, 0,                   // 기본 크기 사용
+                LR_LOADFROMFILE         // 파일에서 로드
+            );
+
             game.startGame(hWnd);
             InvalidateRect(hWnd, NULL, TRUE);
         }
@@ -188,16 +221,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             currentScreen = COLOR_SCREEN;
             DestroyWindow(GetDlgItem(hWnd, 1001));
             DestroyWindow(GetDlgItem(hWnd, 1002));
-            CreateWindow(TEXT("button"), TEXT("❚❚"), WS_VISIBLE | WS_CHILD, 930, 20, 30, 30, hWnd, (HMENU)1003, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
-        }
-        break;
-        case 1003:
-        {
-            game.suspendGame();
-            CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 400, 230, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("다시하기"), WS_VISIBLE | WS_CHILD, 400, 330, 200, 50, hWnd, (HMENU)3002, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("계속하기"), WS_VISIBLE | WS_CHILD, 400, 430, 200, 50, hWnd, (HMENU)3003, hInst, NULL);
         }
         break;
         case 3001:
@@ -232,26 +256,67 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
-    case WM_ERASEBKGND:
-        return 1;
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
+        if (currentScreen == TITLE_SCREEN) {
+        const wchar_t* title = L"GUEST BOOK";
+        HFONT hFont = CreateFont(
+            100,                  // 글꼴 크기
+            0, 0, 0,             // 너비와 각도 (0은 자동 설정)
+            FW_BOLD,             // 굵게 설정
+            FALSE, FALSE, FALSE, // 기울임, 밑줄, 취소선 여부
+            DEFAULT_CHARSET,     // 문자 집합
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY,
+            DEFAULT_PITCH | FF_SWISS,
+            L"Arial");           // 글꼴 이름
+
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        SetBkMode(hdc, TRANSPARENT); // 배경을 투명하게 설정
+        SetTextColor(hdc, RGB(0, 0, 0)); // 검은색 텍스트
+
+        // 화면 중앙 상단에 텍스트를 출력
+        int x = (1000 - 500) / 2;  // 텍스트의 가로 위치 조정
+        int y = 50;  // 텍스트의 세로 위치 조정
+        TextOut(hdc, x, y, title, wcslen(title));
+
+        // 이전 글꼴과 자원 해제
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hFont);
+        }
+
         HDC memDC = CreateCompatibleDC(hdc);
         HBITMAP memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
         HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
 
-        HBRUSH bgBrush = CreateSolidBrush(RGB(135, 206, 235));
+        HBRUSH bgBrush = CreateSolidBrush(RGB(200, 245, 255));
         FillRect(memDC, &ps.rcPaint, bgBrush);
         DeleteObject(bgBrush);
 
-        if (currentScreen == TITLE_SCREEN) {
-            //TextOut(memDC, 400, 100, TEXT("Bounce Ball"), lstrlen(TEXT("Bounce Ball")));
-        }
-        else if (currentScreen == GAME_SCREEN) {
+        if (currentScreen == GAME_SCREEN) 
+        {
             game.createGame(hWnd, memDC);
+
+            HDC imgDC = CreateCompatibleDC(memDC);
+            HBITMAP MyBitmap = (HBITMAP)LoadImage(
+                hInst,                     // 인스턴스 핸들
+                MAKEINTRESOURCE(IDB_BITMAP1),  // 리소스 ID
+                IMAGE_BITMAP,              // 로드할 리소스 타입
+                40, 40,                      // 이미지 크기 (0은 원본 크기 사용)
+                LR_CREATEDIBSECTION        // 로드 옵션
+            );
+            HBITMAP oldImgBitmap = (HBITMAP)SelectObject(imgDC, MyBitmap);
+
+            BitBlt(memDC, 900, 20, 40, 40, imgDC, 0, 0, SRCCOPY);
+
+            SelectObject(imgDC, oldImgBitmap);
+            DeleteDC(imgDC);
+            DeleteObject(hPauseImage);
+
         }
         else if (currentScreen == COLOR_SCREEN) {
             TextOut(memDC, 10, 10, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));

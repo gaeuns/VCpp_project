@@ -132,6 +132,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -141,10 +142,15 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BounceBall.rc" />
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\please.bmp" />
+    <Image Include="bitmap1.bmp" />
     <Image Include="BounceBall.ico" />
+    <Image Include="icon1.ico" />
     <Image Include="small.ico" />
+    <Image Include="stop.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
