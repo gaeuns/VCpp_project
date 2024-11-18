@@ -15,6 +15,12 @@
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
+
+#define ID_GAME_START_BUTTON   1001
+#define ID_PAUSE_BUTTON        1002
+#define ID_RESUME_BUTTON       1003
+#define ID_MAIN_MENU_BUTTON    1004
+
 #endif
 // 다음은 새 개체에 사용할 기본값입니다.
 //

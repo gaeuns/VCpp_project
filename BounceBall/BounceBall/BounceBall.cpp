@@ -10,7 +10,6 @@
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
-ScreenMode currentScreen = TITLE_SCREEN;    // 현재 화면 모드
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -131,15 +130,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        if (currentScreen == TITLE_SCREEN) 
+        if (currentScreen == TITLE_SCREEN)
         {
             CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 400, 250, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
             CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 400, 350, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
         }
     }
-        break;
+    break;
     case WM_KEYUP:
-        switch (wParam) 
+        switch (wParam)
         {
         case VK_LEFT:
             isLeftPressed = false;
@@ -150,96 +149,129 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         break;
-    case WM_KEYDOWN: 
+    case WM_KEYDOWN:
     {
         switch (wParam)
         {
-        case VK_LEFT: 
-                isLeftPressed = true;
-                game.moveLeft();
-                InvalidateRect(hWnd, NULL, TRUE);
+        case VK_LEFT:
+            isLeftPressed = true;
+            game.moveLeft();
+            InvalidateRect(hWnd, NULL, TRUE);
             break;
 
         case VK_RIGHT:
-                isRightPressed = true;
-                game.moveRight();
-                InvalidateRect(hWnd, NULL, TRUE);
+            isRightPressed = true;
+            game.moveRight();
+            InvalidateRect(hWnd, NULL, TRUE);
             break;
         }
         break;
     }
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // 메뉴 선택을 구문 분석합니다:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case 1001:
-            {
-                currentScreen = GAME_SCREEN;
-                DestroyWindow(GetDlgItem(hWnd, 1001));
-                DestroyWindow(GetDlgItem(hWnd, 1002));
-                game.startGame(hWnd);
-                InvalidateRect(hWnd, NULL, TRUE);
-            }
-            break;
-            case 1002:
-            {
-                currentScreen = COLOR_SCREEN;
-                DestroyWindow(GetDlgItem(hWnd, 1001));
-                DestroyWindow(GetDlgItem(hWnd, 1002));
-                InvalidateRect(hWnd, NULL, TRUE);
-            }
-            break;
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case 1001:
+        {
+            currentScreen = GAME_SCREEN;
+            DestroyWindow(GetDlgItem(hWnd, 1001));
+            DestroyWindow(GetDlgItem(hWnd, 1002));
+            CreateWindow(TEXT("button"), TEXT("❚❚"), WS_VISIBLE | WS_CHILD, 930, 20, 30, 30, hWnd, (HMENU)1003, hInst, NULL);
+            game.startGame(hWnd);
+            InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
+        case 1002:
+        {
+            currentScreen = COLOR_SCREEN;
+            DestroyWindow(GetDlgItem(hWnd, 1001));
+            DestroyWindow(GetDlgItem(hWnd, 1002));
+            CreateWindow(TEXT("button"), TEXT("❚❚"), WS_VISIBLE | WS_CHILD, 930, 20, 30, 30, hWnd, (HMENU)1003, hInst, NULL);
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case 1003:
+        {
+            game.suspendGame();
+            CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 400, 230, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("다시하기"), WS_VISIBLE | WS_CHILD, 400, 330, 200, 50, hWnd, (HMENU)3002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("계속하기"), WS_VISIBLE | WS_CHILD, 400, 430, 200, 50, hWnd, (HMENU)3003, hInst, NULL);
+        }
+        break;
+        case 3001:
+        {
+            DestroyWindow(GetDlgItem(hWnd, 3001));
+            DestroyWindow(GetDlgItem(hWnd, 3002));
+            DestroyWindow(GetDlgItem(hWnd, 3003));
+        }
+        break;
+        case 3002:
+        {
+            DestroyWindow(GetDlgItem(hWnd, 3001));
+            DestroyWindow(GetDlgItem(hWnd, 3002));
+            DestroyWindow(GetDlgItem(hWnd, 3003));
+        }
+        break;
+        case 3003:
+        {
+            DestroyWindow(GetDlgItem(hWnd, 3001));
+            DestroyWindow(GetDlgItem(hWnd, 3002));
+            DestroyWindow(GetDlgItem(hWnd, 3003));
+        }
+        break;
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+    }
+    break;
     case WM_ERASEBKGND:
         return 1;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            
-            // 더블 버퍼링 적용
-            HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
-            HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
 
-            HBRUSH bgBrush = CreateSolidBrush(RGB(135, 206, 235));
-            FillRect(memDC, &ps.rcPaint, bgBrush);
-            DeleteObject(bgBrush);
+        HDC memDC = CreateCompatibleDC(hdc);
+        HBITMAP memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
+        HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
 
-            if (currentScreen == TITLE_SCREEN) {
-                TextOut(memDC, 400, 100, TEXT("Bounce Ball"), lstrlen(TEXT("Bounce Ball")));
-            }
-            else if (currentScreen == GAME_SCREEN) {
-                game.createGame(hWnd, memDC);
-            }
-            else if (currentScreen == COLOR_SCREEN) {
-                TextOut(memDC, 10, 10, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));
-            }
+        HBRUSH bgBrush = CreateSolidBrush(RGB(135, 206, 235));
+        FillRect(memDC, &ps.rcPaint, bgBrush);
+        DeleteObject(bgBrush);
 
-            BitBlt(hdc, 0, 0, 1000, 700, memDC, 0, 0, SRCCOPY);
-
-            SelectObject(memDC, oldBitmap);
-            DeleteObject(memBitmap);
-            DeleteDC(memDC);
-
-            EndPaint(hWnd, &ps);
+        if (currentScreen == TITLE_SCREEN) {
+            //TextOut(memDC, 400, 100, TEXT("Bounce Ball"), lstrlen(TEXT("Bounce Ball")));
         }
-        break;
+        else if (currentScreen == GAME_SCREEN) {
+            game.createGame(hWnd, memDC);
+        }
+        else if (currentScreen == COLOR_SCREEN) {
+            TextOut(memDC, 10, 10, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));
+        }
+        else if (currentScreen == PAUSE_SCREEN) {
+            //TextOut(hdc, 400, 100, TEXT("게임이 일시정지되었습니다."), lstrlen(TEXT("게임이 일시정지되었습니다.")));
+        }
+
+        BitBlt(hdc, 0, 0, 1000, 700, memDC, 0, 0, SRCCOPY);
+
+        SelectObject(memDC, oldBitmap);
+        DeleteObject(memBitmap);
+        DeleteDC(memDC);
+
+        EndPaint(hWnd, &ps);
+    }
+    break;
     case WM_DESTROY:
-        PostQuitMessage(0);
         game.stopGame();
+        PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

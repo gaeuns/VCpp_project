@@ -8,8 +8,10 @@
 enum ScreenMode {
     TITLE_SCREEN,
     GAME_SCREEN,
-    COLOR_SCREEN
+    COLOR_SCREEN,
+    PAUSE_SCREEN
 };
 
-bool isLeftPressed = false;
-bool isRightPressed = false;
+static ScreenMode currentScreen = TITLE_SCREEN;
+static bool isLeftPressed = false;
+static bool isRightPressed = false;
