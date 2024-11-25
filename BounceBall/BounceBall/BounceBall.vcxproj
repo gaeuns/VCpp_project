@@ -150,7 +150,6 @@
     <Image Include="BounceBall.ico" />
     <Image Include="icon1.ico" />
     <Image Include="small.ico" />
-    <Image Include="stop.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

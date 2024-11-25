@@ -7,33 +7,41 @@ struct Platform
 
 std::vector<std::vector<Platform>> platforms = 
 {
-    { {100, 200, 600, 20}, {770, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20} }
+    { {100, 200, 400, 20}, {550, 200, 160, 20}, {770, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20}, {550, 50, 50, 20} },
+    { {100, 200, 400, 20}, {600, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20} }
+};
+
+std::vector<std::vector<Platform>> trap =
+{
+    { {500, 200, 50, 20} }
     //{ {100, 200, 400, 20}, {600, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20} }
 };
 
 std::vector<std::vector<Platform>> star =
 {
-    //{ {850, 170, 20, 20}, {110, 370, 20, 20} },
+    { {850, 170, 20, 20}, {110, 370, 20, 20}, {560, 30, 20, 20} },
     { {110, 370, 20, 20} }
 };
 
 void Game::initBall()
 {
-    x = 200;
+    x = 100;
     y = 100;
     speedY = 0;
-    onGround = true;
+    onGround = false;
+    isThread = true;
 
     star =
     {
-        //{ {850, 170, 20, 20}, {110, 370, 20, 20} },
+        { {850, 170, 20, 20}, {110, 370, 20, 20}, {560, 30, 20, 20} },
         { {110, 370, 20, 20} }
     };
+    InvalidateRect(gWnd, NULL, TRUE);
 
-    createGame(gWnd, ghdc);
+    resumeGame();
 }
 
-void GetStarPoints(POINT points[], int centerX, int centerY, int radius) {
+void getStarPoints(POINT points[], int centerX, int centerY, int radius) {
     const double PI = 3.14159265358979323846;
     int numPoints = 10;
 
@@ -47,9 +55,13 @@ void GetStarPoints(POINT points[], int centerX, int centerY, int radius) {
 
 void Game::startGame(HWND hWnd)
 {
+    if (isThread) {
+        stopGame();
+    }
     if (!isThread)
     {
         isThread = true;
+        isJoinble = true;
         ballThread = std::thread(&Game::BallFunction, this);
         threadHandle = ballThread.native_handle();
     }
@@ -58,10 +70,28 @@ void Game::startGame(HWND hWnd)
 void Game::stopGame()
 {
     isThread = false;
-    if (ballThread.joinable())
-        ballThread.join();
-    gWnd = nullptr;
-    ghdc = nullptr;
+    isJoinble = false;
+
+    if (!ballThread.joinable()) {
+        MessageBox(gWnd, L"스레드가 이미 종료된 상태입니다.", L"디버깅", MB_OK);
+        return;
+    }
+
+    if (ballThread.joinable()) {
+        try {
+            MessageBox(gWnd, L"스레드 종료를 시작합니다.", L"디버깅", MB_OK);
+            ballThread.join(); // 스레드 종료 대기
+            MessageBox(gWnd, L"스레드가 정상 종료되었습니다.", L"디버깅", MB_OK);
+        }
+        catch (...) {
+            MessageBox(gWnd, L"스레드 종료 중 예외 발생", L"오류", MB_OK);
+        }
+    }
+    else {
+        MessageBox(gWnd, L"스레드가 이미 종료된 상태입니다.", L"디버깅", MB_OK);
+    }
+
+    ballThread = std::thread();
 }
 
 void Game::suspendGame()
@@ -79,28 +109,32 @@ void Game::createGame(HWND hWnd, HDC hdc)
     gWnd = hWnd;
     ghdc = hdc;
 
-    HPEN ballPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 0));
-    HBRUSH ballBrush = CreateSolidBrush(RGB(255, 255, 0));
-    HPEN osPen = (HPEN)SelectObject(hdc, ballPen);
-    HBRUSH osBrush = (HBRUSH)SelectObject(hdc, ballBrush);
+    HPEN myPen = CreatePen(PS_SOLID, 1, RGB(255, 235, 0));
+    HBRUSH myBrush = CreateSolidBrush(RGB(255, 235, 0));
+    HPEN osPen = (HPEN)SelectObject(hdc, myPen);
+    HBRUSH osBrush = (HBRUSH)SelectObject(hdc, myBrush);
     Ellipse(hdc, x - ballRadius, y - ballRadius, x + ballRadius, y + ballRadius);
     SelectObject(hdc, osPen);
     SelectObject(hdc, osBrush);
-    DeleteObject(ballPen);
-    DeleteObject(ballBrush);
 
-    HBRUSH platformBrush = CreateSolidBrush(RGB(139, 69, 19));
+    myBrush = CreateSolidBrush(RGB(139, 69, 19));
     for (const auto& platform : platforms[currentRound]) 
     {
         RECT platformRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
-        FillRect(hdc, &platformRect, platformBrush);
+        FillRect(hdc, &platformRect, myBrush);
     }
-    DeleteObject(platformBrush);
 
-    HBRUSH starBrush = CreateSolidBrush(RGB(255, 215, 0)); 
-    HPEN starPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
-    HPEN oldPen = (HPEN)SelectObject(hdc, starPen);
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, starBrush);
+    myBrush = CreateSolidBrush(RGB(255, 69, 19));
+    for (const auto& platform : trap[currentRound])
+    {
+        RECT trapRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
+        FillRect(hdc, &trapRect, myBrush);
+    }
+
+    myBrush = CreateSolidBrush(RGB(255, 215, 0)); 
+    myPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+    osPen = (HPEN)SelectObject(hdc, myPen);
+    osBrush = (HBRUSH)SelectObject(hdc, myBrush);
 
     for (size_t i = 0; i < star[currentRound].size(); ++i) {
         POINT points[10];
@@ -108,23 +142,29 @@ void Game::createGame(HWND hWnd, HDC hdc)
         int centerY = star[currentRound][i].y + star[currentRound][i].height / 2;
         int radius = star[currentRound][i].width / 2;
 
-        GetStarPoints(points, centerX, centerY, radius);
+        getStarPoints(points, centerX, centerY, radius);
         Polygon(hdc, points, 10);
     }
+    SelectObject(hdc, osPen);
+    SelectObject(hdc, osBrush);
 
-    SelectObject(hdc, oldPen);
-    SelectObject(hdc, oldBrush);
-    DeleteObject(starPen);
-    DeleteObject(starBrush);
+    DeleteObject(myPen);
+    DeleteObject(myBrush);
 }
 
-void Game::BallFunction() 
+void Game::BallFunction()
 {
     while (isThread)
     {
-        applyGravity();
+        onGround = false;
+        setGravity();
         updatePosition();
         checkCollision();
+
+        if (!isThread) 
+        {
+            break;
+        }
 
         InvalidateRect(gWnd, NULL, TRUE);
 
@@ -132,7 +172,7 @@ void Game::BallFunction()
     }
 }
 
-void Game::applyGravity() 
+void Game::setGravity() 
 {
     if (!onGround)
         speedY += gravity;
@@ -148,11 +188,11 @@ RECT Game::getBallRect() const
     return RECT{ x - ballRadius, y - ballRadius, x + ballRadius, y + ballRadius };
 }
 
-void Game::checkCollision() 
+void Game::checkCollision()
 {
-    onGround = false;
     for (const auto& platform : platforms[currentRound])
     {
+        jumpSpeed = -12;
         RECT platformRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
         RECT ballRect = getBallRect();
         RECT intersection;
@@ -163,47 +203,57 @@ void Game::checkCollision()
             speedY = jumpSpeed;
             onGround = true;
         }
-        if (y > 700)
+    }
+    for (const auto& platform : trap[currentRound])
+    {
+        RECT trapRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
+        RECT ballRect = getBallRect();
+        RECT intersectionT;
+
+        if (IntersectRect(&intersectionT, &ballRect, &trapRect))
         {
-            x = 200;
-            y = 100;
-            speedY = 0;
+            jumpSpeed = -20;
+            y = trapRect.top - ballRadius;
+            speedY = jumpSpeed;
             onGround = true;
         }
     }
-    for (size_t i = 0; i < star[currentRound].size(); ++i) {
+    for (size_t i = 0; i < star[currentRound].size(); ++i)
+    {
         RECT starRect = { star[currentRound][i].x, star[currentRound][i].y,
                           star[currentRound][i].x + star[currentRound][i].width,
                           star[currentRound][i].y + star[currentRound][i].height };
         RECT ballRect = getBallRect();
-        RECT intersection;
+        RECT intersectionS;
 
-        if (IntersectRect(&intersection, &ballRect, &starRect)) {
+        if (IntersectRect(&intersectionS, &ballRect, &starRect))
+        {
             star[currentRound].erase(star[currentRound].begin() + i);
-            if (star[currentRound].empty()) {
-                if (currentRound+1 >= platforms.size())
+            if (star[currentRound].empty())
+            {
+                if (currentRound + 1 >= platforms.size())
                 {
                     MessageBox(gWnd, L"모든 스테이지를 클리어했습니다!", L"게임 종료", MB_OK);
                     stopGame();
-                    PostQuitMessage(0);
-                    return;
-                }
-                if (currentRound >= star.size()) {
-                    MessageBox(gWnd, L"별 데이터가 없습니다!", L"에러", MB_OK);
-                    stopGame();
-                    PostQuitMessage(0);
                     return;
                 }
                 MessageBox(gWnd, L"모든 별을 수집했습니다! 다음 라운드로 이동합니다.", L"다음 라운드", MB_OK);
 
                 currentRound = (currentRound + 1) % platforms.size();
                 starCollected = std::vector<bool>(star[currentRound].size(), false);
-                x = 200;
+                x = 100;
                 y = 100;
                 speedY = 0;
                 onGround = true;
             }
-            break;
+            return;
+        }
+        if (y > 700)
+        {
+            x = 200;
+            y = 100;
+            speedY = 0;
+            onGround = true;
         }
     }
 }
