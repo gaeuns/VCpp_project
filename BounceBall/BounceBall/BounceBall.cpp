@@ -126,8 +126,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+        static HDC imgDC;
+        static HDC memDC;
+        static HBITMAP memBitmap, myBitmap;
     case WM_CREATE:
     {
+        HDC hdc = GetDC(hWnd);
+        memDC = CreateCompatibleDC(hdc);
+        memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
+        SelectObject(memDC, memBitmap);
+        
+        imgDC = CreateCompatibleDC(memDC);
+        myBitmap = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 40, 40, LR_CREATEDIBSECTION);
+        SelectObject(imgDC, myBitmap);
+
+        ReleaseDC(hWnd, hdc);
+
         if (currentScreen == TITLE_SCREEN)
         {
             CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 400, 250, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
@@ -135,18 +149,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hWnd, NULL, TRUE);
             UpdateWindow(hWnd);
         }
-        
     }
     break;
     case WM_ERASEBKGND:
         return 1;
+    case WM_USER + 1:
+        InvalidateRect(hWnd, NULL, TRUE);
+        break;
     case WM_LBUTTONDOWN:
     {
-        // 마우스 클릭 위치
         int xPos = LOWORD(lParam);
         int yPos = HIWORD(lParam);
 
-        // 비트맵 이미지 영역
         RECT bitmapRect = { 900, 20, 940, 60 };
 
         if (xPos >= bitmapRect.left && xPos <= bitmapRect.right && yPos >= bitmapRect.top && yPos <= bitmapRect.bottom)
@@ -192,7 +206,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
-        // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
         case 1001:
@@ -216,6 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case 3001:
         {
             currentScreen = TITLE_SCREEN;
+            game.resumeGame();
             game.stopGame();
             DestroyWindow(GetDlgItem(hWnd, 3001));
             DestroyWindow(GetDlgItem(hWnd, 3002));
@@ -258,10 +272,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
-        HDC memDC = CreateCompatibleDC(hdc);
-        HBITMAP memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
-        HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
-
         HBRUSH bgBrush = CreateSolidBrush(RGB(200, 245, 255));
         FillRect(memDC, &ps.rcPaint, bgBrush);
         DeleteObject(bgBrush);
@@ -270,34 +280,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             game.createGame(hWnd, memDC);
 
-            HDC imgDC = CreateCompatibleDC(memDC);
-            HBITMAP MyBitmap = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 40, 40, LR_CREATEDIBSECTION);
-            HBITMAP oldImgBitmap = (HBITMAP)SelectObject(imgDC, MyBitmap);
+            
 
             BitBlt(memDC, 900, 20, 40, 40, imgDC, 0, 0, SRCCOPY);
 
-            SelectObject(imgDC, oldImgBitmap);
-            DeleteDC(imgDC);
-            DeleteObject(hPauseImage);
         }
         else if (currentScreen == COLOR_SCREEN) {
             TextOut(memDC, 10, 10, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));
         }
-        else if (currentScreen == PAUSE_SCREEN) {
-            //TextOut(hdc, 400, 100, TEXT("게임이 일시정지되었습니다."), lstrlen(TEXT("게임이 일시정지되었습니다.")));
-        }
 
         BitBlt(hdc, 0, 0, 1000, 700, memDC, 0, 0, SRCCOPY);
-
-        SelectObject(memDC, oldBitmap);
-        DeleteObject(memBitmap);
-        DeleteDC(memDC);
 
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
         game.stopGame();
+        DeleteDC(memDC);
+        DeleteObject(memBitmap);
+        DeleteDC(imgDC);
+        DeleteObject(myBitmap);
         PostQuitMessage(0);
         break;
     default:

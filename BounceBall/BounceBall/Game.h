@@ -8,6 +8,8 @@ class Game
 private:
     HWND gWnd;
     HDC ghdc;
+    HPEN myPen, osPen;
+    HBRUSH myBrush, osBrush;
     HANDLE threadHandle;
 
     int ballRadius = 10;
