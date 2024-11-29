@@ -7,5 +7,5 @@ private:
 	HPEN myPen, osPen;
 	HBRUSH myBrush, osBrush;
 public:
-	void initColorScreen(HWND hWnd, HDC hdc, int red, int green, int blue);
+	void initColorScreen(HDC hdc, int red, int green, int blue);
 };

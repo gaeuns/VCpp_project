@@ -22,6 +22,7 @@ private:
     int jumpSpeed = -12;
     bool isThread = false;
     bool onGround = false;
+    RECT intersection;
 
     std::thread ballThread;
     std::vector<bool>starCollected;
@@ -37,10 +38,8 @@ public:
     void stopGame();
     
     void ballFunction();
-    void setGravity();
-    void updatePosition();
-    void updateBombs();
-    void checkCollisionWithBombs();
+    void moveBomb();
+    void checkCollisionBomb();
     void checkCollision();
     void moveLeft();
     void moveRight();

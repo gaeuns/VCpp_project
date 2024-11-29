@@ -1,6 +1,6 @@
 #include "Color.h"
 
-void Color::initColorScreen(HWND hWnd, HDC hdc, int red, int green, int blue)
+void Color::initColorScreen(HDC hdc, int red, int green, int blue)
 {
     myPen = CreatePen(PS_SOLID, 1, RGB(red, green, blue));
     myBrush = CreateSolidBrush(RGB(red, green, blue));

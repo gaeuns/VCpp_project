@@ -14,28 +14,29 @@
 #define IDC_BOUNCEBALL                  109
 #define IDR_MAINFRAME                   128
 #define IDR_ACCELERATOR1                129
-#define IDB_BITMAP2                     130
-#define IDC_STATIC                      -1
+#define IDI_ICON1                       133
 
-#define STARTGAME						1001
-#define EASY							1002
-#define HARD							1003
-#define COLOR							2001
-#define MAIN							3001
-#define RESTART							3002
-#define KEEPGOING						3003
-#define YELLOW							4001
-#define RED								4002
-#define BLUE							4003
-#define DAY								4004
-#define NIGHT							4005
+// BUTTON
+#define STARTGAME                       1001
+#define EASY                            1002
+#define HARD                            1003
+#define COLOR                           2001
+#define MAIN                            3001
+#define RESTART                         3002
+#define KEEPGOING                       3003
+#define YELLOW                          4001
+#define RED                             4002
+#define BLUE                            4003
+#define DAY                             4004
+#define NIGHT                           4005
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
