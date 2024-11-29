@@ -145,6 +145,7 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\exit.bmp" />
     <Image Include="..\please.bmp" />
     <Image Include="bitmap1.bmp" />
     <Image Include="BounceBall.ico" />

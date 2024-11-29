@@ -12,8 +12,8 @@ private:
     HBRUSH myBrush, osBrush;
     HANDLE threadHandle;
 
-    int ballRadius = 10;
-    int x = 100;
+    int ballRadius = 15;
+    int x = 150;
     int y = 100;
     int currentRound = 0;
     int speedY = 0;
@@ -21,14 +21,14 @@ private:
     int gravity = 1;
     int jumpSpeed = -12;
     bool isThread = false;
-    bool isJoinble = true;
     bool onGround = false;
 
     std::thread ballThread;
     std::vector<bool>starCollected;
 
 public:
-    void createGame(HWND, HDC);
+    int gameMode;
+    void createGame(HWND, HDC, int, int, int);
     void initBall();
 
     void startGame(HWND);
@@ -36,9 +36,11 @@ public:
     void resumeGame();
     void stopGame();
     
-    void BallFunction();
+    void ballFunction();
     void setGravity();
     void updatePosition();
+    void updateBombs();
+    void checkCollisionWithBombs();
     void checkCollision();
     void moveLeft();
     void moveRight();

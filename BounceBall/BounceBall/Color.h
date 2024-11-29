@@ -1,5 +1,11 @@
 #pragma once
 #include <windows.h>
 
-//void InitColorWindow(HINSTANCE hInstance);
-void InitColorScreen(HWND hWnd, HDC hdc);
+class Color
+{
+private:
+	HPEN myPen, osPen;
+	HBRUSH myBrush, osBrush;
+public:
+	void initColorScreen(HWND hWnd, HDC hdc, int red, int green, int blue);
+};

@@ -17,6 +17,19 @@
 #define IDB_BITMAP2                     130
 #define IDC_STATIC                      -1
 
+#define STARTGAME						1001
+#define EASY							1002
+#define HARD							1003
+#define COLOR							2001
+#define MAIN							3001
+#define RESTART							3002
+#define KEEPGOING						3003
+#define YELLOW							4001
+#define RED								4002
+#define BLUE							4003
+#define DAY								4004
+#define NIGHT							4005
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

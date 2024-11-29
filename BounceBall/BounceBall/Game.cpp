@@ -7,25 +7,36 @@ struct Platform
 
 std::vector<std::vector<Platform>> platforms = 
 {
-    { {100, 200, 400, 20}, {550, 200, 160, 20}, {770, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20}, {550, 50, 50, 20} },
-    { {100, 200, 400, 20}, {600, 200, 100, 20}, {100, 400, 100, 20}, {270, 400, 600, 20} }
+    { {100, 230, 300, 25}, {550, 230, 200, 25},  {100, 400, 100, 25}, {270, 400, 600, 25}, {450, 80, 50, 25} },
+    { {100, 200, 100, 25}, {500, 200, 100, 25}, {400, 200, 100, 25}, {630, 400, 50, 25}, {700, 250, 100, 25} },
+    { {100, 230, 300, 25}, {550, 230, 200, 25},  {100, 400, 100, 25}, {270, 400, 600, 25}, {450, 80, 50, 25} }
+
 };
 
 std::vector<std::vector<Platform>> trap =
 {
-    { {500, 200, 50, 20} },
-    { {500, 200, 50, 20} }
+    { {400, 230, 50, 25} },
+    { {230, 300, 40, 25}, {300, 200, 40, 25}, {730, 450, 50, 25} },
+    { {400, 230, 50, 25} }
 };
 
 std::vector<std::vector<Platform>> star =
 {
-    { {850, 170, 20, 20}, {110, 370, 20, 20}, {560, 30, 20, 20} },
-    { {110, 370, 20, 20} }
+    { {700, 200, 30, 30}, {110, 370, 30, 30}, {460, 20, 30, 30} },
+    { {230, 30, 30, 30}, {780, 500, 30, 30} },
+    { {700, 200, 30, 30}, {110, 370, 30, 30}, {460, 20, 30, 30} }
 };
 
+std::vector<std::vector<Platform>> bombs = {
+    { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
+    { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
+    { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} }
+};
+
+// 게임 초기화 함수 ( 획득했던 별도 모두 초기화 )
 void Game::initBall()
 {
-    x = 100;
+    x = 150;
     y = 100;
     speedY = 0;
     onGround = false;
@@ -33,14 +44,17 @@ void Game::initBall()
 
     star =
     {
-        { {850, 170, 20, 20}, {110, 370, 20, 20}, {560, 30, 20, 20} },
-        { {110, 370, 20, 20} }
+        { {700, 200, 30, 30}, {110, 370, 30, 30}, {460, 20, 30, 30} },
+        { {230, 30, 30, 30}, {780, 500, 30, 30} },
+        { {700, 200, 30, 30}, {110, 370, 30, 30}, {460, 20, 30, 30} }
     };
+
     InvalidateRect(gWnd, NULL, TRUE);
 
     resumeGame();
 }
 
+// 별 꼭짓점 구하는 함수
 void getStarPoints(POINT points[], int centerX, int centerY, int radius) {
     const double PI = 3.14159265358979323846;
     int numPoints = 10;
@@ -53,6 +67,7 @@ void getStarPoints(POINT points[], int centerX, int centerY, int radius) {
     }
 }
 
+// 스레드 실행 함수
 void Game::startGame(HWND hWnd)
 {
     if (isThread) {
@@ -61,46 +76,42 @@ void Game::startGame(HWND hWnd)
     if (!isThread)
     {
         isThread = true;
-        isJoinble = true;
-        ballThread = std::thread(&Game::BallFunction, this);
+        ballThread = std::thread(&Game::ballFunction, this);
         threadHandle = ballThread.native_handle();
     }
 }
 
+// 스레드 종료 함수
 void Game::stopGame()
 {
     isThread = false;
-    isJoinble = false;
 
-    if (ballThread.joinable()) 
+    if (ballThread.joinable())
     {
-            MessageBox(gWnd, L"스레드 종료를 시작합니다.", L"디버깅", MB_OK);
-            ballThread.join();
-            MessageBox(gWnd, L"스레드가 정상 종료되었습니다.", L"디버깅", MB_OK);
-    }
-    else 
-    {
-        MessageBox(gWnd, L"스레드가 이미 종료된 상태입니다.", L"디버깅", MB_OK);
+        ballThread.join();
     }
 }
 
+// 스레드 일시정지 함수
 void Game::suspendGame()
 {
     SuspendThread(threadHandle);
 }
 
+// 스래드 재생 함수
 void Game::resumeGame()
 {
     ResumeThread(threadHandle);
 }
 
-void Game::createGame(HWND hWnd, HDC hdc)
+// 게임 시작 시 객체들 그리는 함수
+void Game::createGame(HWND hWnd, HDC hdc, int red, int green, int blue)
 {
     gWnd = hWnd;
     ghdc = hdc;
 
-    myPen = CreatePen(PS_SOLID, 1, RGB(255, 235, 0));
-    myBrush = CreateSolidBrush(RGB(255, 235, 0));
+    myPen = CreatePen(PS_SOLID, 1, RGB(red, green, blue));
+    myBrush = CreateSolidBrush(RGB(red, green, blue));
     osPen = (HPEN)SelectObject(hdc, myPen);
     osBrush = (HBRUSH)SelectObject(hdc, myBrush);
 
@@ -141,6 +152,19 @@ void Game::createGame(HWND hWnd, HDC hdc)
         getStarPoints(points, centerX, centerY, radius);
         Polygon(hdc, points, 10);
     }
+    DeleteObject(myBrush);
+
+    if (gameMode == 1) 
+    {
+        myPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+        myBrush = CreateSolidBrush(RGB(0, 0, 0));
+        osPen = (HPEN)SelectObject(hdc, myPen);
+        osBrush = (HBRUSH)SelectObject(hdc, myBrush);
+        for (const auto& bomb : bombs[currentRound]) {
+            Ellipse(hdc, bomb.x, bomb.y, bomb.x + bomb.width, bomb.y + bomb.height);
+        }
+
+    }
 
     SelectObject(hdc, osPen);
     SelectObject(hdc, osBrush);
@@ -148,14 +172,14 @@ void Game::createGame(HWND hWnd, HDC hdc)
     DeleteObject(myBrush);
 }
 
-
-void Game::BallFunction()
+// 스레드가 동작시키는 함수
+void Game::ballFunction()
 {
     while (isThread)
     {
-        if (y > 700)
+        if (y > 650)
         {
-            x = 200;
+            x = 150;
             y = 100;
             speedY = 0;
             onGround = true;
@@ -165,30 +189,65 @@ void Game::BallFunction()
         setGravity();
         updatePosition();
         checkCollision();
+        if (gameMode == 1)
+        {
+            updateBombs();
+            checkCollisionWithBombs();
+        }
 
         PostMessage(gWnd, WM_USER + 1, 0, 0);
 
         Sleep(18);
     }
-    MessageBox(gWnd, L"종료", L"스레드 종료", MB_OK);
 }
 
+// 중력 구현 함수
 void Game::setGravity() 
 {
     if (!onGround)
         speedY += gravity;
 }
 
+// 공 점프 함수
 void Game::updatePosition() 
 {
     y += speedY;
 }
 
+// 폭탄 이동 함수
+void Game::updateBombs()
+{
+    for (auto& bomb : bombs[currentRound]) {
+        bomb.y += 10; 
+        if (bomb.y > 650) { 
+            bomb.y = -50;
+        }
+    }
+}
+
+// 폭탄에 맞았는지 확인하는 함수
+void Game::checkCollisionWithBombs()
+{
+    for (const auto& bomb : bombs[currentRound]) {
+        RECT bombRect = { bomb.x, bomb.y, bomb.x + bomb.width, bomb.y + bomb.height };
+        RECT ballRect = getBallRect();
+        RECT intersection;
+
+        if (IntersectRect(&intersection, &ballRect, &bombRect)) {
+            MessageBox(gWnd, L"폭탄에 맞았습니다!", L"경고", MB_OK);
+            initBall();
+            break;
+        }
+    }
+}
+
+// 공 객체 렉트값 받아오는 함수
 RECT Game::getBallRect() const 
 {
     return RECT{ x - ballRadius, y - ballRadius, x + ballRadius, y + ballRadius };
 }
 
+// 공이 플랫폼, 함정, 별에 닿았는지 확인하는 함수
 void Game::checkCollision()
 {
     for (const auto& platform : platforms[currentRound])
@@ -200,9 +259,22 @@ void Game::checkCollision()
 
         if (IntersectRect(&intersection, &ballRect, &platformRect))
         {
-            y = platformRect.top - ballRadius;
-            speedY = jumpSpeed;
-            onGround = true;
+            int ballCenterY = ballRect.top + (ballRect.bottom - ballRect.top) / 2;
+            int platformCenterY = platformRect.top + (platformRect.bottom - platformRect.top) / 2;
+            int bP = ballCenterY - platformCenterY;
+
+            if (bP > 0)
+            {
+                y = platformRect.bottom + ballRadius;
+                speedY = -jumpSpeed;
+                onGround = false;
+            }
+            else
+            {
+                y = platformRect.top - ballRadius;
+                speedY = jumpSpeed;
+                onGround = true;
+            }
         }
     }
     for (const auto& platform : trap[currentRound])
@@ -244,7 +316,7 @@ void Game::checkCollision()
 
                 currentRound = (currentRound + 1) % platforms.size();
                 starCollected = std::vector<bool>(star[currentRound].size(), false);
-                x = 100;
+                x = 150;
                 y = 100;
                 speedY = 0;
                 onGround = true;
@@ -254,6 +326,7 @@ void Game::checkCollision()
     }
 }
 
+// 공 좌표 왼쪽으로 이동
 void Game::moveLeft() 
 {
     x -= speedX;
@@ -261,6 +334,7 @@ void Game::moveLeft()
         x = ballRadius;
 }
 
+// 공 좌표 오른쪽으로 이동
 void Game::moveRight() 
 {
     x += speedX;

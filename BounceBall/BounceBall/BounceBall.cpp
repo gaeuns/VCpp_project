@@ -98,7 +98,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, 
-                            0, 1000, 700, nullptr, nullptr, hInstance, nullptr);
+                            0, 900, 650, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -121,31 +121,31 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
-Game game;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-        static HDC imgDC;
-        static HDC memDC;
-        static HBITMAP memBitmap, myBitmap;
     case WM_CREATE:
     {
         HDC hdc = GetDC(hWnd);
         memDC = CreateCompatibleDC(hdc);
-        memBitmap = CreateCompatibleBitmap(hdc, 1000, 700);
+        memBitmap = CreateCompatibleBitmap(hdc, 900, 650);
         SelectObject(memDC, memBitmap);
         
         imgDC = CreateCompatibleDC(memDC);
         myBitmap = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 40, 40, LR_CREATEDIBSECTION);
         SelectObject(imgDC, myBitmap);
 
+        exitDC = CreateCompatibleDC(hdc);
+        myBitmap = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(IDB_BITMAP2), IMAGE_BITMAP, 40, 40, LR_CREATEDIBSECTION);
+        SelectObject(exitDC, myBitmap);
+
         ReleaseDC(hWnd, hdc);
 
         if (currentScreen == TITLE_SCREEN)
         {
-            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 400, 250, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 400, 350, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
             UpdateWindow(hWnd);
         }
@@ -161,15 +161,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int xPos = LOWORD(lParam);
         int yPos = HIWORD(lParam);
 
-        RECT bitmapRect = { 900, 20, 940, 60 };
+        RECT bitmapRect = { 800, 20, 840, 60 };
 
         if (xPos >= bitmapRect.left && xPos <= bitmapRect.right && yPos >= bitmapRect.top && yPos <= bitmapRect.bottom)
         {
-            game.suspendGame();
-            CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 400, 230, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("다시하기"), WS_VISIBLE | WS_CHILD, 400, 330, 200, 50, hWnd, (HMENU)3002, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("계속하기"), WS_VISIBLE | WS_CHILD, 400, 430, 200, 50, hWnd, (HMENU)3003, hInst, NULL);
-            InvalidateRect(hWnd, NULL, TRUE);
+            if (currentScreen == GAME_SCREEN)
+            {
+                game.suspendGame();
+                CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 350, 180, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
+                CreateWindow(TEXT("button"), TEXT("다시하기"), WS_VISIBLE | WS_CHILD, 350, 280, 200, 50, hWnd, (HMENU)3002, hInst, NULL);
+                CreateWindow(TEXT("button"), TEXT("계속하기"), WS_VISIBLE | WS_CHILD, 350, 380, 200, 50, hWnd, (HMENU)3003, hInst, NULL);
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+            else if (currentScreen == COLOR_SCREEN)
+            {
+                CreateWindow(TEXT("button"), TEXT("메인화면"), WS_VISIBLE | WS_CHILD, 350, 180, 200, 50, hWnd, (HMENU)3001, hInst, NULL);
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
         }
     }
         break;
@@ -208,52 +216,121 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case 1001:
+        case STARTGAME:
+        {
+            DestroyWindow(GetDlgItem(hWnd, STARTGAME));
+            DestroyWindow(GetDlgItem(hWnd, COLOR));
+            CreateWindow(TEXT("button"), TEXT("EASY"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("HARD"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)1003, hInst, NULL);
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case EASY:
         {
             currentScreen = GAME_SCREEN;
-            DestroyWindow(GetDlgItem(hWnd, 1001));
-            DestroyWindow(GetDlgItem(hWnd, 1002));
+            game.gameMode = 0;
+            DestroyWindow(GetDlgItem(hWnd, EASY));
+            DestroyWindow(GetDlgItem(hWnd, HARD));
 
             game.startGame(hWnd);
             InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
-        case 1002:
+        case HARD:
         {
-            currentScreen = COLOR_SCREEN;
-            DestroyWindow(GetDlgItem(hWnd, 1001));
-            DestroyWindow(GetDlgItem(hWnd, 1002));
+            currentScreen = GAME_SCREEN;
+            game.gameMode = 1;
+            DestroyWindow(GetDlgItem(hWnd, EASY));
+            DestroyWindow(GetDlgItem(hWnd, HARD));
+
+            game.startGame(hWnd);
             InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
-        case 3001:
+        case COLOR:
+        {
+            currentScreen = COLOR_SCREEN;
+            DestroyWindow(GetDlgItem(hWnd, STARTGAME));
+            DestroyWindow(GetDlgItem(hWnd, COLOR));
+            CreateWindow(TEXT("button"), TEXT("노란색"), WS_VISIBLE | WS_CHILD, 300, 230, 100, 100, hWnd, (HMENU)4001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("빨간색"), WS_VISIBLE | WS_CHILD, 450, 230, 100, 100, hWnd, (HMENU)4002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("파란색"), WS_VISIBLE | WS_CHILD, 600, 230, 100, 100, hWnd, (HMENU)4003, hInst, NULL);
+
+            CreateWindow(TEXT("button"), TEXT("낮"), WS_VISIBLE | WS_CHILD, 450, 430, 100, 100, hWnd, (HMENU)4004, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("밤"), WS_VISIBLE | WS_CHILD, 600, 430, 100, 100, hWnd, (HMENU)4005, hInst, NULL);
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case MAIN:
         {
             currentScreen = TITLE_SCREEN;
             game.resumeGame();
+            game.initBall();
             game.stopGame();
-            DestroyWindow(GetDlgItem(hWnd, 3001));
-            DestroyWindow(GetDlgItem(hWnd, 3002));
-            DestroyWindow(GetDlgItem(hWnd, 3003));
-            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 400, 250, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 400, 350, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
+            DestroyWindow(GetDlgItem(hWnd, MAIN));
+            DestroyWindow(GetDlgItem(hWnd, RESTART));
+            DestroyWindow(GetDlgItem(hWnd, KEEPGOING));
+            DestroyWindow(GetDlgItem(hWnd, YELLOW));
+            DestroyWindow(GetDlgItem(hWnd, RED));
+            DestroyWindow(GetDlgItem(hWnd, BLUE));
+            DestroyWindow(GetDlgItem(hWnd, DAY));
+            DestroyWindow(GetDlgItem(hWnd, NIGHT));
+            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
-            UpdateWindow(hWnd);
+            //UpdateWindow(hWnd);
         }
         break;
-        case 3002:
+        case RESTART:
         {
-            DestroyWindow(GetDlgItem(hWnd, 3001));
-            DestroyWindow(GetDlgItem(hWnd, 3002));
-            DestroyWindow(GetDlgItem(hWnd, 3003));
+            DestroyWindow(GetDlgItem(hWnd, MAIN));
+            DestroyWindow(GetDlgItem(hWnd, RESTART));
+            DestroyWindow(GetDlgItem(hWnd, KEEPGOING));
             game.initBall();
         }
         break;
-        case 3003:
+        case KEEPGOING:
         {
-            DestroyWindow(GetDlgItem(hWnd, 3001));
-            DestroyWindow(GetDlgItem(hWnd, 3002));
-            DestroyWindow(GetDlgItem(hWnd, 3003));
+            DestroyWindow(GetDlgItem(hWnd, MAIN));
+            DestroyWindow(GetDlgItem(hWnd, RESTART));
+            DestroyWindow(GetDlgItem(hWnd, KEEPGOING));
             game.resumeGame();
+        }
+        break;
+        case YELLOW:
+        {
+            red = 255;
+            green = 235;
+            blue = 0;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case RED:
+        {
+            red = 255;
+            green = 0;
+            blue = 0;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case BLUE:
+        {
+            red = 0;
+            green = 0;
+            blue = 255;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case DAY:
+        {
+            background = 0;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+        case NIGHT:
+        {
+            background = 1;
+            InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
         case IDM_ABOUT:
@@ -272,21 +349,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
-        HBRUSH bgBrush = CreateSolidBrush(RGB(200, 245, 255));
+        if(background == 0)
+            bgBrush = CreateSolidBrush(RGB(200, 245, 255));
+        else
+            bgBrush = CreateSolidBrush(RGB(75, 0, 130));
+
         FillRect(memDC, &ps.rcPaint, bgBrush);
         DeleteObject(bgBrush);
 
         if (currentScreen == GAME_SCREEN) 
         {
-            game.createGame(hWnd, memDC);
+            game.createGame(hWnd, memDC, red, green, blue);
 
-            
-
-            BitBlt(memDC, 900, 20, 40, 40, imgDC, 0, 0, SRCCOPY);
-
+            BitBlt(memDC, 800, 20, 40, 40, imgDC, 0, 0, SRCCOPY);
         }
-        else if (currentScreen == COLOR_SCREEN) {
-            TextOut(memDC, 10, 10, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));
+        else if (currentScreen == COLOR_SCREEN) 
+        {
+            color.initColorScreen(hWnd, memDC, red, green, blue);
+
+            BitBlt(memDC, 900, 20, 40, 40, exitDC, 0, 0, SRCCOPY);
         }
 
         BitBlt(hdc, 0, 0, 1000, 700, memDC, 0, 0, SRCCOPY);
@@ -299,6 +380,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DeleteDC(memDC);
         DeleteObject(memBitmap);
         DeleteDC(imgDC);
+        DeleteDC(exitDC);
         DeleteObject(myBitmap);
         PostQuitMessage(0);
         break;

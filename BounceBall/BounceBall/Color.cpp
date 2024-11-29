@@ -1,6 +1,16 @@
 #include "Color.h"
 
-void InitColorScreen(HWND hWnd, HDC hdc) {
-    // 색 변경 화면을 그리거나 로직 처리
-    TextOut(hdc, 100, 100, TEXT("색 변경 화면"), lstrlen(TEXT("색 변경 화면")));
+void Color::initColorScreen(HWND hWnd, HDC hdc, int red, int green, int blue)
+{
+    myPen = CreatePen(PS_SOLID, 1, RGB(red, green, blue));
+    myBrush = CreateSolidBrush(RGB(red, green, blue));
+    osPen = (HPEN)SelectObject(hdc, myPen);
+    osBrush = (HBRUSH)SelectObject(hdc, myBrush);
+
+    Ellipse(hdc, 100, 225, 200, 325);
+
+    SelectObject(hdc, osPen);
+    SelectObject(hdc, osBrush);
+    DeleteObject(myPen);
+    DeleteObject(myBrush);
 }
