@@ -14,10 +14,12 @@ enum ScreenMode {
 
 Game game;
 Color color;
-HBRUSH bgBrush;
+
 HDC imgDC;
 HDC memDC;
+HBRUSH bgBrush;
 HICON hIcon;
+HFONT hFont, oldFont;
 HBITMAP memBitmap, myBitmap;
 
 ScreenMode currentScreen = TITLE_SCREEN;

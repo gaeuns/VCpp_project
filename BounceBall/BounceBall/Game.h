@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <thread>
 #include <vector>
+#include "resource.h"
 
 class Game
 {
@@ -15,7 +16,6 @@ private:
     int ballRadius = 15;
     int x = 150;
     int y = 100;
-    int currentRound = 0;
     int speedY = 0;
     int speedX = 3;
     int gravity = 1;
@@ -29,6 +29,7 @@ private:
 
 public:
     int gameMode;
+    int currentRound = 0;
     void createGame(HWND, HDC, int, int, int);
     void initBall();
 

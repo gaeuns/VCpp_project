@@ -134,14 +134,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         
         imgDC = CreateCompatibleDC(memDC);
         hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 40, 40, LR_DEFAULTCOLOR | LR_SHARED);
-        SelectObject(imgDC, hIcon);
+        SelectObject(imgDC, hIcon);       
 
         ReleaseDC(hWnd, hdc);
 
         if (currentScreen == TITLE_SCREEN)
         {
-            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 260, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 360, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
             UpdateWindow(hWnd);
         }
@@ -157,9 +157,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int xPos = LOWORD(lParam);
         int yPos = HIWORD(lParam);
 
-        RECT bitmapRect = { 800, 20, 840, 60 };
-
-        if (xPos >= bitmapRect.left && xPos <= bitmapRect.right && yPos >= bitmapRect.top && yPos <= bitmapRect.bottom)
+        RECT stopRect = { 800, 20, 840, 60 };
+        RECT escapeRect = { 0, 0, 15, 15 };
+        if (xPos >= escapeRect.left && xPos <= escapeRect.right && yPos >= escapeRect.top && yPos <= escapeRect.bottom)
+        {
+            if (game.currentRound < 2)
+            {
+                game.currentRound += 1;
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+        }
+        else if (xPos >= stopRect.left && xPos <= stopRect.right && yPos >= stopRect.top && yPos <= stopRect.bottom)
         {
             if (currentScreen == GAME_SCREEN)
             {
@@ -216,8 +224,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             DestroyWindow(GetDlgItem(hWnd, STARTGAME));
             DestroyWindow(GetDlgItem(hWnd, COLOR));
-            CreateWindow(TEXT("button"), TEXT("EASY"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("HARD"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)1003, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("EASY"), WS_VISIBLE | WS_CHILD, 350, 260, 200, 50, hWnd, (HMENU)1002, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("HARD"), WS_VISIBLE | WS_CHILD, 350, 360, 200, 50, hWnd, (HMENU)1003, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
@@ -261,6 +269,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             if (currentScreen == GAME_SCREEN)
             {
+                game.currentRound = 0;
                 DestroyWindow(GetDlgItem(hWnd, MAIN));
                 DestroyWindow(GetDlgItem(hWnd, RESTART));
                 DestroyWindow(GetDlgItem(hWnd, KEEPGOING));
@@ -273,14 +282,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(GetDlgItem(hWnd, DAY));
                 DestroyWindow(GetDlgItem(hWnd, NIGHT));
             }
-
             currentScreen = TITLE_SCREEN;
             game.resumeGame();
             game.initBall();
             game.stopGame();
             
-            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 200, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
-            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 300, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("게임 시작"), WS_VISIBLE | WS_CHILD, 350, 260, 200, 50, hWnd, (HMENU)1001, hInst, NULL);
+            CreateWindow(TEXT("button"), TEXT("색 변경하기"), WS_VISIBLE | WS_CHILD, 350, 360, 200, 50, hWnd, (HMENU)2001, hInst, NULL);
             InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
@@ -359,8 +367,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         FillRect(memDC, &ps.rcPaint, bgBrush);
         DeleteObject(bgBrush);
-
-        if (currentScreen == GAME_SCREEN) 
+        if (currentScreen == TITLE_SCREEN)
+        {
+            hFont = CreateFont(80, 0, 0, 0, 1000, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, VARIABLE_PITCH | FF_ROMAN, L"굴림");
+            oldFont = (HFONT)SelectObject(memDC, hFont);
+            SetBkMode(memDC, TRANSPARENT);
+            if (background == 0)
+            {
+                SetTextColor(memDC, RGB(0, 0, 0));
+            }
+            else
+            {
+                SetTextColor(memDC, RGB(255, 240, 0));
+            }
+            TextOut(memDC, 170, 130, TEXT("BOUNCE BALL"), 11);
+            SelectObject(memDC, oldFont);
+            DeleteObject(hFont);
+        }
+        else if (currentScreen == GAME_SCREEN) 
         {
             game.createGame(hWnd, memDC, red, green, blue);
 
