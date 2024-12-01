@@ -164,6 +164,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (game.currentRound < 2)
             {
                 game.currentRound += 1;
+                game.initBall();
                 InvalidateRect(hWnd, NULL, TRUE);
             }
         }
