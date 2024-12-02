@@ -29,9 +29,11 @@ private:
 
 public:
     int gameMode;
+    int kk = 0;
     int currentRound = 0;
     void createGame(HWND, HDC, int, int, int);
     void initBall();
+    void initBomb();
 
     void startGame(HWND);
     void suspendGame();

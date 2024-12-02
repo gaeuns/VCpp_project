@@ -21,6 +21,7 @@ HBRUSH bgBrush;
 HICON hIcon;
 HFONT hFont, oldFont;
 HBITMAP memBitmap, myBitmap;
+WCHAR level[100];
 
 ScreenMode currentScreen = TITLE_SCREEN;
 

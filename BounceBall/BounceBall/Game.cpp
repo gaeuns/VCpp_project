@@ -9,7 +9,7 @@ std::vector<std::vector<Platform>> platforms =
 {
     { {30, 250, 370, 25}, {550, 250, 200, 25},  {100, 450, 100, 25}, {270, 450, 600, 25}, {450, 100, 50, 25} },
     { {100, 250, 100, 25}, {500, 250, 100, 25}, {400, 250, 100, 25}, {630, 400, 50, 25}, {700, 250, 100, 25} },
-    { {50, 180, 250, 25}, {600, 150, 250, 25}, {350, 350, 150, 25}, {50, 500, 150, 25}, {600, 500, 250, 25} }
+    { {50, 180, 250, 25}, {600, 170, 250, 25}, {350, 350, 150, 25}, {50, 500, 150, 25}, {600, 500, 250, 25} }
 };
 
 std::vector<std::vector<Platform>> trap =
@@ -29,8 +29,8 @@ std::vector<std::vector<Platform>> star =
 std::vector<std::vector<Platform>> bombs = 
 {
     { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
-    { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
-    { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {550, -50, 30, 30}, {750, -200, 30, 30} }
+    { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30} },
+    { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {550, -50, 30, 30} }
 };
 
 // 게임 초기화 함수 ( 획득했던 별도 모두 초기화 )
@@ -51,12 +51,24 @@ void Game::initBall()
     bombs =
     {
         { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
-        { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
-        { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {550, -50, 30, 30}, {750, -200, 30, 30} }
+        { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30} },
+        { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {550, -50, 30, 30} }
     };
 
     InvalidateRect(gWnd, NULL, TRUE);
     resumeGame();
+}
+
+void Game::initBomb()
+{
+    bombs =
+    {
+        { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {750, -200, 30, 30} },
+        { {50, -50, 30, 30}, {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30} },
+        { {180, 0, 30, 30}, {310, -150, 30, 30}, {450, -100, 30, 30}, {550, -50, 30, 30} }
+    };
+
+    InvalidateRect(gWnd, NULL, TRUE);
 }
 
 // 별 꼭짓점 구하는 함수
@@ -201,7 +213,8 @@ void Game::ballFunction()
         if (gameMode == 1)
         {
             moveBomb();
-            checkCollisionBomb();
+            if (kk == 0)
+                checkCollisionBomb();
         }
         if (y > 650)
         {
@@ -224,13 +237,9 @@ void Game::moveBomb()
         {
             bomb.y += 6;
         }
-        else if (currentRound == 1)
-        {
-            bomb.y += 8;
-        }
         else
         {
-            bomb.y += 10;
+            bomb.y += 8;
         }
 
         if (bomb.y > 650) 
@@ -274,6 +283,20 @@ void Game::checkCollision()
         RECT platformRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
         RECT ballRect = getBallRect();
 
+        // 함정 플랫폼 충돌 감지
+        for (const auto& platform : trap[currentRound])
+        {
+            RECT trapRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
+            RECT ballRect = getBallRect();
+
+            if (IntersectRect(&intersection, &ballRect, &trapRect))
+            {
+                jumpSpeed = -19;
+                y = trapRect.top - ballRadius;
+                speedY = jumpSpeed;
+                onGround = true;
+            }
+        }
         if (IntersectRect(&intersection, &ballRect, &platformRect))
         {
             int ballCenter = ballRect.top + ballRadius;
@@ -294,20 +317,7 @@ void Game::checkCollision()
             }
         }
     }
-    // 함정 플랫폼 충돌 감지
-    for (const auto& platform : trap[currentRound])
-    {
-        RECT trapRect = { platform.x, platform.y, platform.x + platform.width, platform.y + platform.height };
-        RECT ballRect = getBallRect();
-
-        if (IntersectRect(&intersection, &ballRect, &trapRect))
-        {
-            jumpSpeed = -20;
-            y = trapRect.top - ballRadius;
-            speedY = jumpSpeed;
-            onGround = true;
-        }
-    }
+   
     // 별 획득 감지
     for (size_t i = 0; i < star[currentRound].size(); ++i)
     {
@@ -322,6 +332,7 @@ void Game::checkCollision()
             --i;
             if (star[currentRound].empty())
             {
+                InvalidateRect(gWnd, NULL, TRUE);
                 if (currentRound + 1 >= platforms.size())
                 {
                     MessageBox(gWnd, L"모든 스테이지를 클리어했습니다!", L"게임 종료", MB_OK);

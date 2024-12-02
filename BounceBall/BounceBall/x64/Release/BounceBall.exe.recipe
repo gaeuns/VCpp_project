@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\choige\Desktop\VCpp_project\BounceBall\x64\Debug\BounceBall.exe</FullPath>
+      <FullPath>C:\Users\choige\Desktop\VCpp_project\BounceBall\x64\Release\BounceBall.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
